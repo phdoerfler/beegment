@@ -1,1 +1,2 @@
 target
+src/test/scala/io/doerfler/beep/package.scala
