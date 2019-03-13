@@ -8,6 +8,7 @@ lazy val root = (project in file(".")).
       scalaVersion    := "2.12.8"
     )),
     name := "Beep",
+    version := "1",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http"            % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
@@ -19,3 +20,7 @@ lazy val root = (project in file(".")).
       "com.typesafe.akka" %% "akka-stream-testkit"  % akkaVersion     % Test
     )
   )
+
+enablePlugins(PackPlugin)
+packMain := Map("beep" -> "io.doerfler.beep.Beep")
+packJvmOpts := Map("beep" -> Seq("-Xmx16m"))

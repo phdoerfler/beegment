@@ -29,23 +29,6 @@ object BeepService extends HttpApp with BeeminderSupport {
     }
 }
 
-trait BeeminderSupport {
-  object Beeminder {
-    def requestRefresh(goal: Goal)(implicit token: AuthToken) = {
-      v1(base / "users" / "me" / "goals" / goal.slug / "refresh_graph.json")
-    }
-
-    def v1(path: Path)(implicit token: AuthToken): HttpRequest = {
-      HttpRequest(uri = Uri.from(scheme = "https", host = "www.beeminder.com", path = path.toString) withQuery Query("auth_token" -> token.value))
-    }
-
-    def base = Path / "api" / "v1"
-  }
-
-  case class Goal(slug: String)
-  case class AuthToken(value: String)
-}
-
 object Beep extends App {
   BeepService.startServer("localhost", 8040)
 }
