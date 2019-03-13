@@ -1,4 +1,4 @@
-package io.doerfler.beep
+package io.doerfler.beegment
 
 import akka.http.scaladsl.model.{ ContentTypes, HttpEntity }
 import akka.http.scaladsl.server.HttpApp

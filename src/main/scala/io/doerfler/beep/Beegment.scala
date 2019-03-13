@@ -1,4 +1,4 @@
-package io.doerfler.beep
+package io.doerfler.beegment
 
 import akka.http.scaladsl.model.{ ContentTypes, HttpEntity }
 import akka.http.scaladsl.server.HttpApp
@@ -11,7 +11,7 @@ import akka.http.scaladsl.Http
 import scala.util.{ Failure, Success }
 
 
-object BeepService extends HttpApp with BeeminderSupport {
+object BeegmentService extends HttpApp with BeeminderSupport {
   implicit val system = ActorSystem()
   implicit val executionContext = system.dispatcher
   def Slug = Segment map Goal
@@ -26,9 +26,12 @@ object BeepService extends HttpApp with BeeminderSupport {
           }
         }
       }
+    } ~
+    path("oauth") {
+      complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<div>You can now use Beep!</div>"))
     }
 }
 
-object Beep extends App {
-  BeepService.startServer("localhost", 8040)
+object Beegment extends App {
+  BeegmentService.startServer("localhost", 8040)
 }
