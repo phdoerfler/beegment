@@ -1,22 +1,21 @@
-val Http4sVersion = "0.18.22"
-val Specs2Version = "4.1.0"
-val LogbackVersion = "1.2.3"
+lazy val akkaHttpVersion = "10.1.7"
+lazy val akkaVersion    = "2.5.21"
 
-lazy val root = (project in file("."))
-  .settings(
-    organization := "io.doerfler",
-    name := "echobee",
-    version := "0.0.1-SNAPSHOT",
-    scalaVersion := "2.12.8",
+lazy val root = (project in file(".")).
+  settings(
+    inThisBuild(List(
+      organization    := "doerfler.io",
+      scalaVersion    := "2.12.8"
+    )),
+    name := "Beep",
     libraryDependencies ++= Seq(
-      "org.http4s"      %% "http4s-blaze-server" % Http4sVersion,
-      "org.http4s"      %% "http4s-blaze-client" % Http4sVersion,
-      "org.http4s"      %% "http4s-circe"        % Http4sVersion,
-      "org.http4s"      %% "http4s-dsl"          % Http4sVersion,
-      "org.specs2"      %% "specs2-core"         % Specs2Version % "test",
-      "ch.qos.logback"  %  "logback-classic"     % LogbackVersion
-    ),
-    addCompilerPlugin("org.spire-math" %% "kind-projector"     % "0.9.6"),
-    addCompilerPlugin("com.olegpy"     %% "better-monadic-for" % "0.2.4")
-  )
+      "com.typesafe.akka" %% "akka-http"            % akkaHttpVersion,
+      "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
+      "com.typesafe.akka" %% "akka-http-xml"        % akkaHttpVersion,
+      "com.typesafe.akka" %% "akka-stream"          % akkaVersion,
 
+      "com.typesafe.akka" %% "akka-http-testkit"    % akkaHttpVersion % Test,
+      "com.typesafe.akka" %% "akka-testkit"         % akkaVersion     % Test,
+      "com.typesafe.akka" %% "akka-stream-testkit"  % akkaVersion     % Test
+    )
+  )
