@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/phdoerfler/beep.svg?branch=master)](https://travis-ci.com/phdoerfler/beep)
+[![Build Status](https://travis-ci.com/phdoerfler/beegment.svg?branch=master)](https://travis-ci.com/phdoerfler/beep)
 
 # Additions to the Beeminder API
 
