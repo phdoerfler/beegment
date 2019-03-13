@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/phdoerfler/beep.svg?branch=master)](https://travis-ci.com/phdoerfler/beep)
+
 # Auto Refresh for Beeminder's Trello Integration
 
 ## How to Run
