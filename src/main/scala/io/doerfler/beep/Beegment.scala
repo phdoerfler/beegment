@@ -8,15 +8,14 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{ Uri, HttpRequest }
 import akka.http.scaladsl.model.Uri.{ Path, Query }
 import akka.http.scaladsl.Http
-import scala.util.{ Failure, Success }
+import scala.util.{ Failure, Success, Try }
+import akka.Done
 
 
 object BeegmentService extends HttpApp with BeeminderSupport {
-  implicit val system = ActorSystem()
-  implicit val executionContext = system.dispatcher
   def Slug = Segment map Goal
 
-  override def routes: Route =
+  override def routes: Route = withSystem { implicit system =>
     pathPrefix("goal" / Slug) { goal =>
       path("refresh") {
         post {
@@ -28,8 +27,11 @@ object BeegmentService extends HttpApp with BeeminderSupport {
       }
     } ~
     path("oauth") {
-      complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<div>You can now use Beep!</div>"))
+      complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<div>You can now use Beegment!</div>"))
     }
+  }
+  
+  def withSystem(f: (ActorSystem) => Route): Route = extractActorSystem { f }
 }
 
 object Beegment extends App {
