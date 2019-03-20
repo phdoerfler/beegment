@@ -10,4 +10,4 @@
 
 Use `sbt run` or `sbt ~reStart` during development.
 
-To create a distributable version, run `sbt pack`, then start the server with `target/pack/bin/beep`.
+To create a distributable version, run `sbt pack`, then start the server with `target/pack/bin/beegment`.

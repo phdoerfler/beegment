@@ -9,8 +9,9 @@ import akka.http.scaladsl.model.{ Uri, HttpRequest }
 import akka.http.scaladsl.model.Uri.{ Path, Query }
 import akka.http.scaladsl.Http
 import scala.util.{ Failure, Success }
+import Beeminder._
 
-trait BeeminderSupport {
+trait BeeminderApi {
   object Beeminder {
     def requestRefresh(goal: Goal)(implicit token: AuthToken) = {
       v1(base / "users" / "me" / "goals" / goal.slug / "refresh_graph.json")
@@ -22,7 +23,4 @@ trait BeeminderSupport {
 
     def base = Path / "api" / "v1"
   }
-
-  case class Goal(slug: String)
-  case class AuthToken(value: String)
 }
