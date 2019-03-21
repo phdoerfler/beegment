@@ -17,7 +17,7 @@ import akka.actor._
 import Beeminder._
 import AuthActor._
 
-object BeegmentService extends HttpApp with BeeminderApi {
+object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport {
   implicit val system = Beegment.system
   val authActor = system.actorOf(Props[AuthActor], "auth")
 
@@ -52,8 +52,12 @@ object BeegmentService extends HttpApp with BeeminderApi {
     }
   }
 
+}
+
+trait MarshallingSupport extends akka.http.scaladsl.server.PathMatchers {
   def Slug = Segment map Goal
-  implicit def `String <-> AccessToken` = PredefinedFromEntityUnmarshallers.stringUnmarshaller map AccessToken
+  implicit def `String <-> AccessToken`: FromEntityUnmarshaller[AccessToken] =
+    PredefinedFromEntityUnmarshallers.stringUnmarshaller map AccessToken
 }
 
 object Beegment extends App {
