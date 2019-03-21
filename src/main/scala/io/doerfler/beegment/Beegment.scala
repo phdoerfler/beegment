@@ -3,6 +3,7 @@ package io.doerfler.beegment
 import akka.http.scaladsl.model.{ ContentTypes, HttpEntity }
 import akka.http.scaladsl.server.HttpApp
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.unmarshalling._
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{ Uri, HttpRequest }
@@ -17,15 +18,10 @@ import Beeminder._
 import AuthActor._
 
 object BeegmentService extends HttpApp with BeeminderApi {
-  import Beegment.system
-
-  def Slug = Segment map Goal
-
+  implicit val system = Beegment.system
   val authActor = system.actorOf(Props[AuthActor], "auth")
 
-  authActor ! "print"
-
-  override def routes: Route = withSystem { implicit system =>
+  override def routes: Route = {
     pathPrefix("goal" / Slug) { goal =>
       path("refresh") {
         post {
@@ -36,20 +32,28 @@ object BeegmentService extends HttpApp with BeeminderApi {
         }
       }
     } ~
-    path("oauth" / "landing") {
+    path("oauth" / "authorize") {
       get {
         parameter('access_token).as(AccessToken) { implicit token =>
           parameter('username).as(Username) { username =>
             authActor ! AuthAdded(username, token)
-            authActor ! "print"
-            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, s"<h1>Beegment authorized</h1><h2>Hi $username!</h2>"))
+            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, s"<h1>Authorization Granted</h1><h2>Hi ${username.value}!</h2>"))
           }
+        }
+      }
+    } ~
+    path("oauth" / "deauthorize") {
+      post {
+        entity(as[AccessToken]) { token =>
+          authActor ! AuthRemoved(token)
+          complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, s"<h1>Authorization Revoked</h1>"))
         }
       }
     }
   }
 
-  def withSystem(f: (ActorSystem) => Route): Route = extractActorSystem { f }
+  def Slug = Segment map Goal
+  implicit def `String <-> AccessToken` = PredefinedFromEntityUnmarshallers.stringUnmarshaller map AccessToken
 }
 
 object Beegment extends App {
