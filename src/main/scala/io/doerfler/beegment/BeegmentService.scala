@@ -14,12 +14,27 @@ import akka.Done
 
 import akka.actor._
 
+import scala.concurrent.duration._
+import akka.util.Timeout
+import akka.pattern.ask
+
 import Beeminder._
 import AuthActor._
+
+import scala.concurrent.Future
+
+import akka.http.scaladsl.server.AuthorizationFailedRejection
 
 object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport {
   implicit val system = Beegment.system
   val authActor = system.actorOf(Props[AuthActor], "auth")
+  implicit val timeout = Timeout(5 seconds)
+  import system.dispatcher
+
+  def meep(goal: Goal, ot: Option[AccessToken]) = ot match {
+    case Some(t) => Http() singleRequest Beeminder.requestRefresh(goal)(t)
+    case None => Future.failed(new Exception("No token found"))
+  }
 
   override def routes: Route = {
     pathPrefix("goal" / Slug) { goal =>
@@ -28,6 +43,15 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
           parameter('auth_token).as(AuthToken) { implicit token =>
             val responseFuture = Http() singleRequest Beeminder.requestRefresh(goal)
             onSuccess(responseFuture) { complete(_) }
+          } ~
+          parameter('username).as(Username) { username =>
+            val f = for {
+              ot <- (authActor ? LookupToken(username)).mapTo[Option[AccessToken]]
+              r  <- meep(goal, ot)
+            } yield r
+            completeOrRecoverWith(f) { failure =>
+              reject(AuthorizationFailedRejection)
+            }
           }
         }
       }

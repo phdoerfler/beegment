@@ -13,14 +13,19 @@ import Beeminder._
 
 trait BeeminderApi {
   object Beeminder {
-    def requestRefresh(goal: Goal)(implicit token: AuthToken) = {
+    def requestRefresh(goal: Goal)(implicit token: Token) = {
       v1(base / "users" / "me" / "goals" / goal.slug / "refresh_graph.json")
     }
 
-    def v1(path: Path)(implicit token: AuthToken): HttpRequest = {
-      HttpRequest(uri = Uri.from(scheme = "https", host = "www.beeminder.com", path = path.toString) withQuery Query("auth_token" -> token.value))
+    def base = Path / "api" / "v1"
+
+    def v1(path: Path)(implicit token: Token): HttpRequest = {
+      HttpRequest(uri = Uri.from(scheme = "https", host = "www.beeminder.com", path = path.toString) withQuery Query(fromToken(token)))
     }
 
-    def base = Path / "api" / "v1"
+    def fromToken(token: Token) = token match {
+      case AuthToken(s)   => "auth_token" -> s
+      case AccessToken(s) => "access_token" -> s
+    }
   }
 }
