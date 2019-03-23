@@ -39,7 +39,7 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
 
   override def routes: Route = {
     pathSingleSlash {
-      redirect("https://www.beeminder.com/apps/authorize?client_id=9xieoto9lhsk0fjuf7upzoaz7&redirect_uri=https://doerfler.io:8042/oauth/authorize&response_type=token", TemporaryRedirect)
+      redirect("https://www.beeminder.com/apps/authorize?client_id=9xieoto9lhsk0fjuf7upzoaz7&redirect_uri=https://doerfler.io:8042/oauth/authorize&response_type=token", PermanentRedirect)
     } ~
     pathPrefix("goal" / Slug) { goal =>
       path("refresh") {
