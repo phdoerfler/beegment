@@ -31,9 +31,10 @@ trait BeeminderApi {
 
   object BeeminderApps {
     def authorizeUri = {
+      val baseurl = Beegment.system.settings.config.getString("baseurl")
       Uri.from(scheme = "https", host = "www.beeminder.com", path = "/apps/authorize") withQuery Query(
-        "client_id" -> "9xieoto9lhsk0fjuf7upzoaz7",
-        "redirect_uri" -> "https://doerfler.io:8042/oauth/authorize",
+        "client_id" -> Beegment.system.settings.config.getString("appid"),
+        "redirect_uri" -> s"$baseurl/oauth/authorize",
         "response_type" -> "token")
     }
   }
