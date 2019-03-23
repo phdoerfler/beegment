@@ -24,6 +24,7 @@ import AuthActor._
 import scala.concurrent.Future
 
 import akka.http.scaladsl.server.AuthorizationFailedRejection
+import akka.http.scaladsl.model.StatusCodes._
 
 object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport {
   implicit val system = Beegment.system
@@ -31,14 +32,14 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
   implicit val timeout = Timeout(5 seconds)
   import system.dispatcher
 
-  def meep(goal: Goal, ot: Option[AccessToken]) = ot match {
+  def refresh(goal: Goal, ot: Option[AccessToken]) = ot match {
     case Some(t) => Http() singleRequest Beeminder.requestRefresh(goal)(t)
     case None => Future.failed(new Exception("No token found"))
   }
 
   override def routes: Route = {
     pathSingleSlash {
-      redirect("https://www.beeminder.com/apps/authorize?client_id=9xieoto9lhsk0fjuf7upzoaz7&redirect_uri=https://doerfler.io:8042/oauth/authorize&response_type=token", StatusCode.TemporaryRedirect)
+      redirect("https://www.beeminder.com/apps/authorize?client_id=9xieoto9lhsk0fjuf7upzoaz7&redirect_uri=https://doerfler.io:8042/oauth/authorize&response_type=token", TemporaryRedirect)
     } ~
     pathPrefix("goal" / Slug) { goal =>
       path("refresh") {
@@ -50,7 +51,7 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
           parameter('username).as(Username) { username =>
             val f = for {
               ot <- (authActor ? LookupToken(username)).mapTo[Option[AccessToken]]
-              r  <- meep(goal, ot)
+              r  <- refresh(goal, ot)
             } yield r
             completeOrRecoverWith(f) { failure =>
               reject(AuthorizationFailedRejection)
