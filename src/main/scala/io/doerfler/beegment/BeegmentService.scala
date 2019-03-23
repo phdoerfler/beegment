@@ -37,6 +37,9 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
   }
 
   override def routes: Route = {
+    pathSingleSlash {
+      complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, s"""<html><head><meta http-equiv="refresh" content="0; URL='https://www.beeminder.com/apps/authorize?client_id=9xieoto9lhsk0fjuf7upzoaz7&redirect_uri=https://doerfler.io:8042/oauth/authorize&response_type=token'" /></head><body><h1>Welcome to Beegment. Authorizing with Beeminder…</h1></body></html>"""))
+    } ~
     pathPrefix("goal" / Slug) { goal =>
       path("refresh") {
         post {
