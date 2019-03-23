@@ -1,0 +1,38 @@
+@APIKey = your_trello_api_key
+@APIToken = your_trello_api_token
+@tbase = https://api.trello.com/1
+
+@bbase = https://www.beeminder.com/api/v1
+@bauth = your_beeminder_auth_token
+@u = your_user
+@g = your_slug
+@refresh = {{bbase}}/users/{{u}}/goals/{{g}}/refresh_graph.json?auth_token={{bauth}}
+
+### Get trello boards
+# @name getBoards
+GET {{tbase}}/members/me/boards?key={{APIKey}}&token={{APIToken}}
+
+### Now we got the id of the relevant board
+@spihtId = {{getBoards.response.body.$[?(@.name=='your_board_name')].id}}
+
+# @name createHook
+POST {{tbase}}/tokens/{{APIToken}}/webhooks/?key={{APIKey}} HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+description=refresh graph
+&callbackURL={{refresh}}
+&idModel={{spihtId}}
+
+###
+
+@hookId = {{createHook.response.body.$.id}}
+
+### This gave us a hook
+# which we can look at
+GET {{tbase}}/tokens/{{APIToken}}/webhooks/{{hookId}}?key={{APIKey}} HTTP/1.1
+
+### and finally delete again
+DELETE {{tbase}}/tokens/{{APIToken}}/webhooks/{{hookId}}?key={{APIKey}} HTTP/1.1
+
+### List all webhooks just to make sure we got them all
+GET {{tbase}}/tokens/{{APIToken}}/webhooks/?key={{APIKey}} HTTP/1.1

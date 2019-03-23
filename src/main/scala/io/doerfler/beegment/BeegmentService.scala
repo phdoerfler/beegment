@@ -65,7 +65,8 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
         parameter('access_token).as(AccessToken) { implicit token =>
           parameter('username).as(Username) { username =>
             authActor ! AuthAdded(username, token)
-            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, s"<h1>Authorization Granted</h1><h2>Hi ${username.value}!</h2>"))
+            val help = scala.io.Source.fromResource("instructions.http").getLines.mkString("\n")
+            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, s"<h1>Beegment</h1><h2>Hi ${username.value}! You are now authorized.</h2><h3>Use this as a starting point for setting up your trello webhook:</h3><code><pre>$help</pre></code>"))
           }
         }
       }
