@@ -35,7 +35,6 @@ class AuthActor extends PersistentActor with BeeminderApi {
         updateState(event)
         context.system.eventStream.publish(event)
         self ! "print"
-        //saveSnapshot(state)
       }
     case LookupToken(u) =>
       sender ! state.users.get(u)
