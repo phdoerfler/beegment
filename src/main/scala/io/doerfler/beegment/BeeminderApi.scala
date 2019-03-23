@@ -31,7 +31,7 @@ trait BeeminderApi {
 
   object BeeminderApps {
     def authorizeUri = {
-      Uri.from(scheme = "https", host = "www.beeminder.com", path = "apps/authorize") withQuery Query(
+      Uri.from(scheme = "https", host = "www.beeminder.com", path = "/apps/authorize") withQuery Query(
         "client_id" -> "9xieoto9lhsk0fjuf7upzoaz7",
         "redirect_uri" -> "https://doerfler.io:8042/oauth/authorize",
         "response_type" -> "token")
