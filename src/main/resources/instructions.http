@@ -2,18 +2,18 @@
 @APIToken = your_trello_api_token
 @tbase = https://api.trello.com/1
 
-@bbase = https://www.beeminder.com/api/v1
-@bauth = your_beeminder_auth_token
+@dbase = https://doerfler.io:8042
+
 @u = your_user
 @g = your_slug
-@refresh = {{bbase}}/users/{{u}}/goals/{{g}}/refresh_graph.json?auth_token={{bauth}}
+@refresh = {{dbase}}/goal/{{g}}/refresh?username={{u}}
 
 ### Get trello boards
 # @name getBoards
 GET {{tbase}}/members/me/boards?key={{APIKey}}&token={{APIToken}}
 
 ### Now we got the id of the relevant board
-@spihtId = {{getBoards.response.body.$[?(@.name=='your_board_name')].id}}
+@boardId = {{getBoards.response.body.$[?(@.name=='your_board_name')].id}}
 
 # @name createHook
 POST {{tbase}}/tokens/{{APIToken}}/webhooks/?key={{APIKey}} HTTP/1.1
@@ -21,7 +21,7 @@ Content-Type: application/x-www-form-urlencoded
 
 description=refresh graph
 &callbackURL={{refresh}}
-&idModel={{spihtId}}
+&idModel={{boardId}}
 
 ###
 

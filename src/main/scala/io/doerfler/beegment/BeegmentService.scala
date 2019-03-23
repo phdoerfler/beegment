@@ -39,7 +39,7 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
 
   override def routes: Route = {
     pathSingleSlash {
-      redirect("https://www.beeminder.com/apps/authorize?client_id=9xieoto9lhsk0fjuf7upzoaz7&redirect_uri=https://doerfler.io:8042/oauth/authorize&response_type=token", PermanentRedirect)
+      redirect(BeeminderApps.authorizeUri, PermanentRedirect)
     } ~
     pathPrefix("goal" / Slug) { goal =>
       path("refresh") {
@@ -63,10 +63,10 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
     path("oauth" / "authorize") {
       get {
         parameter('access_token).as(AccessToken) { implicit token =>
-          parameter('username).as(Username) { username =>
+          parameter('username).as(Username) { implicit username =>
             authActor ! AuthAdded(username, token)
-            val help = scala.io.Source.fromResource("instructions.http").getLines.mkString("\n")
-            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, s"<h1>Beegment</h1><h2>Hi ${username.value}! You are now authorized.</h2><h3>Use this as a starting point for setting up your trello webhook:</h3><code><pre>$help</pre></code>"))
+            val help = scala.io.Source.fromResource("instructions.http").getLines map replaceUser mkString "\n"
+            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, s"<h1>Beegment</h1><h2>Hi ${username.value}! You are now authorized.</h2><div>Use this as a starting point for setting up your trello webhook:</div><pre><code>$help</code></pre>"))
           }
         }
       }
@@ -79,5 +79,11 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
         }
       }
     }
+  }
+
+  def replaceUser(line: String)(implicit username: Username) = {
+    if (line.startsWith("@u")) {
+      s"@u = ${username.value}"
+    } else line
   }
 }
