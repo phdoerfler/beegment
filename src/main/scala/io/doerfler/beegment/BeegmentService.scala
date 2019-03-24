@@ -66,17 +66,13 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
           parameter('username).as(Username) { implicit username =>
             // verify this username and access_token are correct and match
             val nf = Http() singleRequest Beeminder.requestUsername
-            nf onComplete {
-              case Success(usernameJson) =>
-                println(usernameJson)
-                authActor ! AuthAdded(username, token)
-                val help = scala.io.Source.fromResource("instructions.http").getLines map replaceUser mkString "\n"
-                val baseUrl = system.settings.config.getString("baseurl")
-                HttpEntity(ContentTypes.`text/html(UTF-8)`, s"""<h1>Beegment</h1><h2>Hi ${username.value}! You are authorized.</h2><div><a href="$baseUrl">Again?</a></div><div>Use this as a starting point for setting up your trello webhook:</div><pre><code>$help</code></pre>""")
-              case Failure(t) =>
-                println(t)
+            val nf2 = nf.map { responseWithUsername =>
+              authActor ! AuthAdded(username, token)
+              val help = scala.io.Source.fromResource("instructions.http").getLines map replaceUser mkString "\n"
+              val baseUrl = system.settings.config.getString("baseurl")
+              HttpEntity(ContentTypes.`text/html(UTF-8)`, s"""<h1>Beegment</h1><h2>Hi ${username.value}! You are authorized.</h2><div><a href="$baseUrl">Again?</a></div><div>Use this as a starting point for setting up your trello webhook:</div><pre><code>$help</code></pre>""")
             }
-            completeOrRecoverWith(nf) { failure =>
+            completeOrRecoverWith(nf2) { failure =>
               reject(AuthorizationFailedRejection)
             }
           }
