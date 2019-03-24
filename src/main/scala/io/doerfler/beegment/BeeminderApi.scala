@@ -13,9 +13,11 @@ import Beeminder._
 
 trait BeeminderApi {
   object Beeminder {
-    def requestRefresh(goal: Goal)(implicit token: Token) = {
+    def requestRefresh(goal: Goal)(implicit token: Token) =
       v1(base / "users" / "me" / "goals" / goal.slug / "refresh_graph.json")
-    }
+
+    def requestUsername(implicit token: Token) =
+      v1(base / "me.json")
 
     def base = Path / "api" / "v1"
 
