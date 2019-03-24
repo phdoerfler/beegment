@@ -26,11 +26,16 @@ import scala.concurrent.Future
 import akka.http.scaladsl.server.AuthorizationFailedRejection
 import akka.http.scaladsl.model.StatusCodes._
 
-object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport {
+import akka.stream.ActorMaterializer
+
+
+
+object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport with JsonSupport {
   implicit val system = Beegment.system
   val authActor = system.actorOf(Props[AuthActor], "auth")
   implicit val timeout = Timeout(5 seconds)
   import system.dispatcher
+  implicit val mat = ActorMaterializer() // created from `system`
 
   def refresh(goal: Goal, ot: Option[AccessToken]) = ot match {
     case Some(t) => Http() singleRequest Beeminder.requestRefresh(goal)(t)
@@ -64,14 +69,18 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
       get {
         parameter('access_token).as(AccessToken) { implicit token =>
           parameter('username).as(Username) { implicit username =>
-            // verify this username and access_token are correct and match
-            val nf = Http() singleRequest Beeminder.requestUsername
-            val nf2 = nf.map { responseWithUsername =>
-              authActor ! AuthAdded(username, token)
+            // verify this username and access_token are correct and
+            val nf2 = (for {
+              r  <- Http() singleRequest Beeminder.requestUsername
+              uf <- Unmarshal(r).to[UsernameLookup]
+              u   = Username(uf.username)
+            } yield {
+              require(username == u, "Provided user name and looked up user name should match")
+              authActor ! AuthAdded(u, token)
               val help = scala.io.Source.fromResource("instructions.http").getLines map replaceUser mkString "\n"
               val baseUrl = system.settings.config.getString("baseurl")
               HttpEntity(ContentTypes.`text/html(UTF-8)`, s"""<h1>Beegment</h1><h2>Hi ${username.value}! You are authorized.</h2><div><a href="$baseUrl">Again?</a></div><div>Use this as a starting point for setting up your trello webhook:</div><pre><code>$help</code></pre>""")
-            }
+            })
             completeOrRecoverWith(nf2) { failure =>
               reject(AuthorizationFailedRejection)
             }
@@ -95,3 +104,6 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
     } else line
   }
 }
+
+
+
