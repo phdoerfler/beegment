@@ -42,6 +42,10 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
     case None => Future.failed(new Exception("No token found"))
   }
 
+  def logData(dpa: DatapointAdded) = {
+    println(dpa)
+  }
+
   override def routes: Route = {
     pathSingleSlash {
       redirect(BeeminderApps.authorizeUri, PermanentRedirect)
@@ -60,6 +64,24 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
             } yield r
             completeOrRecoverWith(f) { failure =>
               reject(AuthorizationFailedRejection)
+            }
+          }
+        }
+      }
+    } ~
+    pathPrefix("goal" / Slug) { goal =>
+      path("data" / "added") {
+        post {
+          entity(as[DatapointAdded]) { dpa =>
+            parameter('username).as(Username) { username =>
+              val f = for {
+                _ <- (authActor ? LookupToken(username)).mapTo[Option[AccessToken]]
+              } yield logData(dpa)
+              f.foreach(println)
+              
+              completeOrRecoverWith(f map (_ => "true")) { failure =>
+                reject(AuthorizationFailedRejection)
+              }
             }
           }
         }
