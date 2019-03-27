@@ -46,9 +46,13 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
     println(dpa)
   }
 
+  def htmlForRedirect(to: Uri, body: String) = {
+    s"""<html><head><meta http-equiv="refresh" content="0; URL='$to'" /></head><body>$body</body></html>"""
+  }
+
   override def routes: Route = {
     pathSingleSlash {
-      redirect(BeeminderApps.authorizeUri, PermanentRedirect)
+      complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, htmlForRedirect(BeeminderApps.authorizeUri, "<h1>Welcome to Beegment</h1><h2>Authorizing with Beeminder…</h2>")))
     } ~
     pathPrefix("goal" / Slug) { goal =>
       path("refresh") {
@@ -91,7 +95,6 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
       get {
         parameter('access_token).as(AccessToken) { implicit token =>
           parameter('username).as(Username) { implicit username =>
-            // verify this username and access_token are correct and
             val nf2 = (for {
               r  <- Http() singleRequest Beeminder.requestUsername
               uf <- Unmarshal(r).to[UsernameLookup]
