@@ -11,4 +11,6 @@ package object beegment {
     case class AuthToken(value: String) extends Token
     case class AccessToken(value: String) extends Token
   }
+
+  type :=>[A, B] = PartialFunction[A, B]
 }

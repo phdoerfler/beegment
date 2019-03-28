@@ -52,11 +52,11 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
 
   override def routes: Route = {
     pathSingleSlash {
-      complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, htmlForRedirect(BeeminderApps.authorizeUri, "<h1>Welcome to Beegment</h1><h2>Authorizing with Beeminder…</h2>")))
+      complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, htmlForRedirect(BeeminderApps.authorizeUri, "<h1>Beegment</h1><h2>Authorizing with Beeminder…</h2>")))
     } ~
     pathPrefix("goal" / Slug) { goal =>
       path("refresh") {
-        post {
+        (post | get) {
           parameter('auth_token).as(AuthToken) { implicit token =>
             val responseFuture = Http() singleRequest Beeminder.requestRefresh(goal)
             onSuccess(responseFuture) { complete(_) }
@@ -102,7 +102,7 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
             } yield {
               require(username == u, "Provided user name and looked up user name should match")
               authActor ! AuthAdded(u, token)
-              val help = scala.io.Source.fromResource("instructions.http").getLines map replaceUser mkString "\n"
+              val help = scala.io.Source.fromResource("instructions.http").getLines map replaceUser map replaceBase mkString "\n"
               val baseUrl = system.settings.config.getString("baseurl")
               HttpEntity(ContentTypes.`text/html(UTF-8)`, s"""<h1>Beegment</h1><h2>Hi ${username.value}! You are authorized.</h2><div><a href="$baseUrl">Again?</a></div><div>Use this as a starting point for setting up your trello webhook:</div><pre><code>$help</code></pre>""")
             })
@@ -126,6 +126,12 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
   def replaceUser(line: String)(implicit username: Username) = {
     if (line.startsWith("@u")) {
       s"@u = ${username.value}"
+    } else line
+  }
+
+  def replaceBase(line: String) = {
+    if (line startsWith "@dbase") {
+      s"@dbase = ${system.settings.config.getString("baseurl")}"
     } else line
   }
 }
