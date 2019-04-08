@@ -56,7 +56,7 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
     } ~
     pathPrefix("goal" / Slug) { goal =>
       path("refresh") {
-        (post | get) {
+        post {
           parameter('auth_token).as(AuthToken) { implicit token =>
             val responseFuture = Http() singleRequest Beeminder.requestRefresh(goal)
             onSuccess(responseFuture) { complete(_) }
