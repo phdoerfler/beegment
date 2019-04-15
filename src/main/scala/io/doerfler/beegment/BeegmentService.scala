@@ -28,6 +28,8 @@ import akka.http.scaladsl.model.StatusCodes._
 
 import akka.stream.ActorMaterializer
 
+import akka.http.scaladsl.server.directives.Credentials
+
 
 
 object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport with JsonSupport {
@@ -50,31 +52,38 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
     s"""<html><head><meta http-equiv="refresh" content="0; URL='$to'" /></head><body>$body</body></html>"""
   }
 
+  def authenticateViaBeeminder(creds: Credentials): Future[Option[AccessToken]] = creds match {
+    case Credentials.Provided(bt) =>
+      for {
+        r  <- Http() singleRequest Beeminder.requestUsername(AccessToken(bt))
+      } yield Some(AccessToken(bt))
+    case _ => Future successful None
+  }
+
   override def routes: Route = {
     pathSingleSlash {
       complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, htmlForRedirect(BeeminderApps.authorizeUri, "<h1>Beegment</h1><h2>Authorizing with Beeminder…</h2>")))
     } ~
-    pathPrefix("goal" / Slug) { goal =>
+    pathPrefix("goals" / Slug) { goal =>
       path("refresh") {
         post {
-          parameter('auth_token).as(AuthToken) { implicit token =>
-            val responseFuture = Http() singleRequest Beeminder.requestRefresh(goal)
-            onSuccess(responseFuture) { complete(_) }
-          } ~
           parameter('username).as(Username) { username =>
-            val f = for {
-              ot <- (authActor ? LookupToken(username)).mapTo[Option[AccessToken]]
-              r  <- refresh(goal, ot)
-            } yield r
-            completeOrRecoverWith(f) { failure =>
-              reject(AuthorizationFailedRejection)
+            authenticateOAuth2Async("beegment", authenticateViaBeeminder) { implicit t =>
+              val f = Http() singleRequest Beeminder.requestRefresh(goal)
+              onSuccess(f) { complete(_) }
             }
           }
         }
-      }
-    } ~
-    pathPrefix("goal" / Slug) { goal =>
-      path("data" / "added") {
+      } ~
+      path("datapoints") {
+        post { // post = create/update the whole list of datapoints
+          complete("true")
+        } ~
+        put { // put = append to the list of datapoints
+          complete("true")
+        }
+      } ~
+      path("datapoints" / "added") {
         post {
           entity(as[DatapointAdded]) { dpa =>
             parameter('username).as(Username) { username =>
