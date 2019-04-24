@@ -18,6 +18,10 @@ trait BeeminderApi {
 
     def requestUsername(implicit token: Token) =
       v1(base / "me.json")
+    
+    def addDatapoint(goal: Goal, dp: String)(implicit token: Token) = {
+      v1(base / "users" / "me" / "goals" / goal.slug / "datapoints.json")
+    }
 
     def base = Path / "api" / "v1"
 

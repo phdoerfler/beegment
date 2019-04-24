@@ -4,6 +4,7 @@ package object beegment {
   object Beeminder {
     case class Goal(slug: String)
     case class Username(value: String)
+    case class PointInTime(value: String)
 
     sealed trait Token {
       def value: String

@@ -5,7 +5,8 @@ lazy val root = (project in file(".")).
   settings(
     inThisBuild(List(
       organization    := "doerfler.io",
-      scalaVersion    := "2.12.8"
+      scalaVersion    := "2.12.8",
+      scalacOptions ++= Seq("language:_")
     )),
     name := "Beegment",
     version := "1",
@@ -18,6 +19,8 @@ lazy val root = (project in file(".")).
 
       "org.iq80.leveldb"            % "leveldb"          % "0.11",
       "org.fusesource.leveldbjni"   % "leveldbjni-all"   % "1.8",
+
+      "com.github.nscala-time" %% "nscala-time" % "2.22.0",
 
       "com.typesafe.akka" %% "akka-http-testkit"    % akkaHttpVersion % Test,
       "com.typesafe.akka" %% "akka-testkit"         % akkaVersion     % Test,

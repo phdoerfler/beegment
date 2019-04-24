@@ -18,7 +18,7 @@ import Beeminder._
 import AuthActor._
 
 object Beegment extends App {
-  val system = ActorSystem("universe")
+  implicit val system = ActorSystem("universe")
   BeegmentService.startServer("localhost", 8040, system)
   system.terminate()
 }

@@ -30,10 +30,30 @@ import akka.stream.ActorMaterializer
 
 import akka.http.scaladsl.server.directives.Credentials
 
+trait Routes { _: HttpApp with JsonSupport with BeeminderApi =>
+  import com.github.nscala_time.time.Imports._
+  import Beegment.system
+  import system.dispatcher
 
+  def addDatapointIfConditionIsMet(goal: Goal)(implicit t: AccessToken) = post {
+    entity(as[DatapointAdded]) { dpa =>
+      parameter('ifLaterThan).as(PointInTime) { startOfInterval =>
+        parameter('ifBeforeThan).as(PointInTime) { endOfInterval =>
+          val lateEnough = DateTime.parse(startOfInterval.value) < DateTime.now
+          val earlyEnough = DateTime.now < DateTime.parse(endOfInterval.value)
+          if (lateEnough && earlyEnough) {
+            val f = Http() singleRequest Beeminder.addDatapoint(goal, dpa.value)
+            onSuccess(f) { complete(_) }
+          } else complete("Datapoint not added: condition not met")
+        }
+      }
+    }
+  }
+}
 
-object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport with JsonSupport {
-  implicit val system = Beegment.system
+object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport with JsonSupport with Routes {
+  import Beegment.system
+
   val authActor = system.actorOf(Props[AuthActor], "auth")
   implicit val timeout = Timeout(5 seconds)
   import system.dispatcher
@@ -65,35 +85,30 @@ object BeegmentService extends HttpApp with BeeminderApi with MarshallingSupport
       complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, htmlForRedirect(BeeminderApps.authorizeUri, "<h1>Beegment</h1><h2>Authorizing with Beeminder…</h2>")))
     } ~
     pathPrefix("goals" / Slug) { goal =>
-      path("refresh") {
-        post {
-          parameter('username).as(Username) { username =>
-            authenticateOAuth2Async("beegment", authenticateViaBeeminder) { implicit t =>
+      authenticateOAuth2Async("beegment", authenticateViaBeeminder) { implicit t =>
+        path("refresh") {
+          post {
+            parameter('username).as(Username) { username =>
               val f = Http() singleRequest Beeminder.requestRefresh(goal)
               onSuccess(f) { complete(_) }
             }
           }
-        }
-      } ~
-      path("datapoints") {
-        post { // post = create/update the whole list of datapoints
-          complete("true")
         } ~
-        put { // put = append to the list of datapoints
-          complete("true")
-        }
-      } ~
-      path("datapoints" / "added") {
-        post {
-          entity(as[DatapointAdded]) { dpa =>
-            parameter('username).as(Username) { username =>
-              val f = for {
-                _ <- (authActor ? LookupToken(username)).mapTo[Option[AccessToken]]
-              } yield logData(dpa)
-              f.foreach(println)
-              
-              completeOrRecoverWith(f map (_ => "true")) { failure =>
-                reject(AuthorizationFailedRejection)
+        path("datapoints") {
+          addDatapointIfConditionIsMet(goal)
+        } ~
+        path("datapoints" / "added") {
+          post {
+            entity(as[DatapointAdded]) { dpa =>
+              parameter('username).as(Username) { username =>
+                val f = for {
+                  _ <- (authActor ? LookupToken(username)).mapTo[Option[AccessToken]]
+                } yield logData(dpa)
+                f.foreach(println)
+                
+                completeOrRecoverWith(f map (_ => "true")) { failure =>
+                  reject(AuthorizationFailedRejection)
+                }
               }
             }
           }
