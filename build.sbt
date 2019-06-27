@@ -17,7 +17,7 @@ lazy val root = (project in file(".")).
       "com.typesafe.akka" %% "akka-stream"          % akkaVersion,
       "com.typesafe.akka" %% "akka-persistence"     % akkaVersion,
 
-      "org.iq80.leveldb"            % "leveldb"          % "0.11",
+      "org.iq80.leveldb"            % "leveldb"          % "0.12",
       "org.fusesource.leveldbjni"   % "leveldbjni-all"   % "1.8",
 
       "com.github.nscala-time" %% "nscala-time" % "2.22.0",
