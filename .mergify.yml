@@ -1,8 +1,9 @@
 pull_request_rules:
   - name: Merge suggestions by Scala Steward
     conditions:
-      - "author=scala-steward"
-      - "-conflict"
+      - author=scala-steward
+      - -conflict
+      - status-success=Travis CI - Pull Request
     actions:
       merge:
         method: rebase
