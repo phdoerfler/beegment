@@ -20,7 +20,7 @@ lazy val root = (project in file(".")).
       "org.iq80.leveldb"            % "leveldb"          % "0.12",
       "org.fusesource.leveldbjni"   % "leveldbjni-all"   % "1.8",
 
-      "com.github.nscala-time" %% "nscala-time" % "2.26.0",
+      "com.github.nscala-time" %% "nscala-time" % "2.28.0",
 
       "com.typesafe.akka" %% "akka-http-testkit"    % akkaHttpVersion % Test,
       "com.typesafe.akka" %% "akka-testkit"         % akkaVersion     % Test,
