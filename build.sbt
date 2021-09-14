@@ -5,7 +5,7 @@ lazy val root = (project in file(".")).
   settings(
     inThisBuild(List(
       organization    := "doerfler.io",
-      scalaVersion    := "2.12.14",
+      scalaVersion    := "2.12.15",
       scalacOptions ++= Seq("language:_")
     )),
     name := "Beegment",
