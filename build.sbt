@@ -1,11 +1,11 @@
-lazy val akkaHttpVersion = "10.2.4"
-lazy val akkaVersion    = "2.6.12"
+lazy val akkaHttpVersion = "10.2.6"
+lazy val akkaVersion    = "2.6.16"
 
 lazy val root = (project in file(".")).
   settings(
     inThisBuild(List(
       organization    := "doerfler.io",
-      scalaVersion    := "2.13.6",
+      scalaVersion    := "2.12.15",
       scalacOptions ++= Seq("language:_")
     )),
     name := "Beegment",
